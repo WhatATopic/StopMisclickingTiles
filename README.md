@@ -1,2 +1,2 @@
-# Example
-An example greeter plugin
+# Description
+Allows you to disable the "walk here" action on specified tiles.
