@@ -23,9 +23,9 @@ dependencies {
 	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
 }
 
-group = 'com.example'
+group = 'com.stopmisclickingtiles'
 version = '1.0-SNAPSHOT'
-sourceCompatibility = '1.8'
+sourceCompatibility = '1.9'
 
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
