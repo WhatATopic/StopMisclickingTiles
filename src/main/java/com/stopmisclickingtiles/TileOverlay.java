@@ -57,21 +57,20 @@ public class TileOverlay extends Overlay
     @Override
     public Dimension render(Graphics2D graphics)
     {
-        final Collection<DisabledTile> tiles = plugin.getDisabledTiles();
-        if (tiles.isEmpty())
+        final Collection<WorldPoint> points = plugin.getDisabledPoints();
+        if (points.isEmpty())
         {
             return null;
         }
 
-        for (final DisabledTile tile : tiles)
+        for (final WorldPoint point : points)
         {
-            WorldPoint worldPoint = WorldPoint.fromRegion(tile.getRegionId(), tile.getRegionX(), tile.getRegionY(), tile.getZ());
-            if (worldPoint.getPlane() != client.getPlane())
+            if (point.getPlane() != client.getPlane())
             {
                 continue;
             }
 
-            drawTile(graphics, worldPoint);
+            drawTile(graphics, point);
         }
 
         return null;

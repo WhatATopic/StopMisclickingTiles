@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @PluginDescriptor(
@@ -76,7 +77,7 @@ public class StopMisclickingTilesPlugin extends Plugin
 	private Gson gson;
 
 	@Getter(AccessLevel.PACKAGE)
-	private final List<DisabledTile> disabledTiles = new ArrayList<>();
+	private final List<WorldPoint> disabledPoints = new ArrayList<>();
 
 	private static final String CONFIG_GROUP = "smt";
 	private static final String REGION_PREFIX = "region_";
@@ -92,7 +93,7 @@ public class StopMisclickingTilesPlugin extends Plugin
 	protected void shutDown() throws Exception
 	{
 		overlayManager.remove(overlay);
-		disabledTiles.clear();
+		disabledPoints.clear();
 	}
 
 	@Subscribe
@@ -134,7 +135,7 @@ public class StopMisclickingTilesPlugin extends Plugin
 
 	void loadTiles()
 	{
-		disabledTiles.clear();
+		disabledPoints.clear();
 
 		int[] regions = client.getMapRegions();
 
@@ -148,8 +149,26 @@ public class StopMisclickingTilesPlugin extends Plugin
 			// load points for region
 			log.debug("Loading points for region {}", regionId);
 			Collection<DisabledTile> regionTiles = getDisabledTiles(regionId);
-			disabledTiles.addAll(regionTiles);
+			Collection<WorldPoint> points = translateToWorldPoint(regionTiles);
+			disabledPoints.addAll(points);
 		}
+	}
+
+	private Collection<WorldPoint> translateToWorldPoint(Collection<DisabledTile> tiles)
+	{
+		if (tiles.isEmpty())
+		{
+			return Collections.emptyList();
+		}
+
+		return tiles.stream()
+				.map(tile -> WorldPoint.fromRegion(tile.getRegionId(), tile.getRegionX(), tile.getRegionY(), tile.getZ()))
+				.flatMap(wp ->
+				{
+					final Collection<WorldPoint> localWorldPoints = WorldPoint.toLocalInstance(client, wp);
+					return localWorldPoints.stream();
+				})
+				.collect(Collectors.toList());
 	}
 
 	@Subscribe
@@ -159,7 +178,13 @@ public class StopMisclickingTilesPlugin extends Plugin
 			&& event.getMenuTarget().isEmpty())
 		{
 			final Tile tile = client.getSelectedSceneTile();
-			final WorldPoint worldPoint = tile.getWorldLocation();
+
+			if (tile == null)
+			{
+				return;
+			}
+			
+			final WorldPoint worldPoint = WorldPoint.fromLocalInstance(client, tile.getLocalLocation());
 			final int regionId = worldPoint.getRegionID();
 			final DisabledTile dTile = new DisabledTile(regionId, worldPoint.getRegionX(), worldPoint.getRegionY(), worldPoint.getPlane());
 			if (getDisabledTiles(regionId).contains(dTile))
@@ -182,7 +207,7 @@ public class StopMisclickingTilesPlugin extends Plugin
 				return;
 			}
 
-			final WorldPoint worldPoint = selectedSceneTile.getWorldLocation();
+			final WorldPoint worldPoint = WorldPoint.fromLocalInstance(client, selectedSceneTile.getLocalLocation());
 			final int regionId = worldPoint.getRegionID();
 			final DisabledTile dTile = new DisabledTile(regionId, worldPoint.getRegionX(), worldPoint.getRegionY(), worldPoint.getPlane());
 			final boolean exists = getDisabledTiles(regionId).contains(dTile);
@@ -209,7 +234,7 @@ public class StopMisclickingTilesPlugin extends Plugin
 			return;
 		}
 
-		final WorldPoint worldPoint = tile.getWorldLocation();
+		final WorldPoint worldPoint = WorldPoint.fromLocalInstance(client, tile.getLocalLocation());
 		final int regionId = worldPoint.getRegionID();
 		final DisabledTile dTile = new DisabledTile(regionId, worldPoint.getRegionX(), worldPoint.getRegionY(), worldPoint.getPlane());
 		List<DisabledTile> tiles = new ArrayList<>(getDisabledTiles(regionId));
