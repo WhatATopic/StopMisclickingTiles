@@ -174,8 +174,7 @@ public class StopMisclickingTilesPlugin extends Plugin
 	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked event)
 	{
-		if (event.getMenuOption().equalsIgnoreCase("Walk here")
-			&& event.getMenuTarget().isEmpty())
+		if (event.getMenuOption().equalsIgnoreCase("Walk here"))
 		{
 			final Tile tile = client.getSelectedSceneTile();
 
