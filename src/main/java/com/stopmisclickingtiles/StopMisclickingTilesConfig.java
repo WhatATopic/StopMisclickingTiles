@@ -28,8 +28,6 @@ package com.stopmisclickingtiles;
 import net.runelite.client.config.*;
 
 import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
 
 @ConfigGroup("stopmisclickingtiles")
 public interface StopMisclickingTilesConfig extends Config
@@ -54,5 +52,25 @@ public interface StopMisclickingTilesConfig extends Config
 	default double borderWidth()
 	{
 		return 2;
+	}
+	@ConfigItem(
+			keyName = "disableTilesBlockedByObject",
+			name = "Disable Tiles Blocked By Object",
+			description = "Disables the walk here action on tiles blocked by an object.",
+			position = 2
+	)
+	default boolean disableTilesBlockedByObject()
+	{
+		return false;
+	}
+	@ConfigItem(
+			keyName = "disableOtherBlockedTiles",
+			name = "Disable Other Blocked Tiles",
+			description = "Disables the walk here action on other blocked tiles.",
+			position = 3
+	)
+	default boolean disableOtherBlockedTiles()
+	{
+		return false;
 	}
 }

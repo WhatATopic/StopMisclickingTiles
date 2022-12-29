@@ -45,10 +45,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -186,7 +183,29 @@ public class StopMisclickingTilesPlugin extends Plugin
 			final WorldPoint worldPoint = WorldPoint.fromLocalInstance(client, tile.getLocalLocation());
 			final int regionId = worldPoint.getRegionID();
 			final DisabledTile dTile = new DisabledTile(regionId, worldPoint.getRegionX(), worldPoint.getRegionY(), worldPoint.getPlane());
+
 			if (getDisabledTiles(regionId).contains(dTile))
+			{
+				event.consume();
+				return;
+			}
+
+			if (client.getCollisionMaps() == null)
+			{
+				return;
+			}
+
+			final int[][] flags = client.getCollisionMaps()[client.getPlane()].getFlags();
+			final int data = flags[tile.getSceneLocation().getX()][tile.getSceneLocation().getY()];
+			final Set<MovementFlag> movementFlags = MovementFlag.getSetFlags(data);
+
+			if (config.disableTilesBlockedByObject()
+					&& movementFlags.contains(MovementFlag.BLOCK_MOVEMENT_OBJECT))
+			{
+				event.consume();
+			}
+			else if (config.disableOtherBlockedTiles()
+					&& movementFlags.contains(MovementFlag.BLOCK_MOVEMENT_FLOOR))
 			{
 				event.consume();
 			}
@@ -250,8 +269,6 @@ public class StopMisclickingTilesPlugin extends Plugin
 
 		loadTiles();
 	}
-
-
 
 	@Provides
 	StopMisclickingTilesConfig provideConfig(ConfigManager configManager)
