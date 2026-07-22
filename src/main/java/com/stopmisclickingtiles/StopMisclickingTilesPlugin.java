@@ -41,9 +41,11 @@ import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
+import net.runelite.client.util.HotkeyListener;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -73,17 +75,44 @@ public class StopMisclickingTilesPlugin extends Plugin
 	@Inject
 	private Gson gson;
 
+	@Inject
+	private KeyManager keyManager;
+
 	@Getter(AccessLevel.PACKAGE)
 	private final List<WorldPoint> disabledPoints = new ArrayList<>();
 
 	private static final String CONFIG_GROUP = "smt";
 	private static final String REGION_PREFIX = "region_";
 
+	private boolean hotkeyHeld = false;
+
+	private final HotkeyListener hotkeyListener = new HotkeyListener(() -> config.hotkeyToggle())
+	{
+		@Override
+		public void hotkeyPressed()
+		{
+			if(config.hotkeyToggleMode() == KeybindMode.TOGGLE){
+				hotkeyHeld = !hotkeyHeld;
+			}else{
+				hotkeyHeld = true;
+			}
+		}
+
+		@Override
+		public void hotkeyReleased()
+		{
+			if(config.hotkeyToggleMode() == KeybindMode.HOLD){
+				hotkeyHeld = false;
+			}
+		}
+	};
+
 	@Override
 	protected void startUp() throws Exception
 	{
 		overlayManager.add(overlay);
 		loadTiles();
+		keyManager.registerKeyListener(hotkeyListener);
 	}
 
 	@Override
@@ -91,6 +120,7 @@ public class StopMisclickingTilesPlugin extends Plugin
 	{
 		overlayManager.remove(overlay);
 		disabledPoints.clear();
+		keyManager.unregisterKeyListener(hotkeyListener);
 	}
 
 	@Subscribe
@@ -171,6 +201,10 @@ public class StopMisclickingTilesPlugin extends Plugin
 	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked event)
 	{
+		if (hotkeyHeld) {
+			return;
+		}
+
 		if (event.getMenuOption().equalsIgnoreCase("Walk here"))
 		{
 			final Tile tile = client.getSelectedSceneTile();
