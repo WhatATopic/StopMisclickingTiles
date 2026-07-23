@@ -73,4 +73,20 @@ public interface StopMisclickingTilesConfig extends Config
 	{
 		return false;
 	}
+
+	@ConfigItem(
+		keyName = "hotkeyToggle",
+		name = "Disable/Enable Hotkey",
+		description = "This key will allow you to temporarily walk on disabled tiles",
+		position = 4
+	)
+	default Keybind hotkeyToggle() { return Keybind.NOT_SET; }
+
+	@ConfigItem(
+		keyName = "hotkeyToggleMode",
+		name = "Hotkey Mode",
+		description = "Whether the hotkey above will toggle when pressed, or must be held down",
+		position = 5
+	)
+	default KeybindMode hotkeyToggleMode() { return KeybindMode.HOLD; }
 }
